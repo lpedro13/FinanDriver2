@@ -182,6 +182,7 @@ logger.error = (msg, options) => {
 }
 
 export default defineConfig({
+	base: '/FinanDriver./', // Adicione esta linha com o nome do seu repositório
 	customLogger: logger,
 	plugins: [react(), addTransformIndexHtml],
 	server: {
