@@ -1,74 +1,32 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { fileURLToPath, URL } from 'url';
-import path from 'node:path';
-import tsconfigPaths from 'vite-tsconfig-paths';
-
-const configHorizonsRuntimeErrorHandler = `
-  // Código do manipulador de erros de tempo de execução
-`;
-
-const configHorizonsViteErrorHandler = `
-  // Código do manipulador de erros do Vite
-`;
-
-const configHorizonsConsoleErrorHandler = `
-  // Código do manipulador de erros do console
-`;
-
-const configWindowFetchMonkeyPatch = `
-  // Código do patch para o fetch
-`;
-
-const addTransformIndexHtml = {
-  name: 'add-transform-index-html',
-  transformIndexHtml(html) {
-    return {
-      html,
-      tags: [
-        {
-          tag: 'script',
-          attrs: { type: 'module' },
-          children: configHorizonsRuntimeErrorHandler,
-          injectTo: 'head',
-        },
-        {
-          tag: 'script',
-          attrs: { type: 'module' },
-          children: configHorizonsViteErrorHandler,
-          injectTo: 'head',
-        },
-        {
-          tag: 'script',
-          attrs: { type: 'module' },
-          children: configHorizonsConsoleErrorHandler,
-          injectTo: 'head',
-        },
-        {
-          tag: 'script',
-          attrs: { type: 'module' },
-          children: configWindowFetchMonkeyPatch,
-          injectTo: 'head',
-        },
-      ],
-    };
-  },
-};
+import path from 'path';
 
 export default defineConfig({
-  base: 'https://github.com/lpedro13/FinanDriver.',
-  plugins: [react(), tsconfigPaths(), addTransformIndexHtml],
+  base: '/FinanDriver2/', // Corrigido para o nome do repositório
+  plugins: [react()],
+  build: {
+    outDir: 'docs', // Especifica a pasta de saída
+    emptyOutDir: true, // Limpa a pasta de saída antes do build
+    rollupOptions: {
+      output: {
+        assetFileNames: 'assets/[name].[hash].[ext]',
+        chunkFileNames: 'assets/[name].[hash].js',
+        entryFileNames: 'assets/[name].[hash].js'
+      }
+    }
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+    extensions: ['.js', '.jsx', '.ts', '.tsx', '.json']
+  },
   server: {
     cors: true,
     headers: {
       'Cross-Origin-Embedder-Policy': 'credentialless',
     },
     allowedHosts: true,
-  },
-  resolve: {
-    extensions: ['.jsx', '.js', '.tsx', '.ts', '.json'],
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
+  }
 });
