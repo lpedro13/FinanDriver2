@@ -56,7 +56,7 @@ const addTransformIndexHtml = {
 };
 
 export default defineConfig({
-  base: '/FinanDriver/',
+  base: 'https://github.com/lpedro13/FinanDriver.',
   plugins: [react(), tsconfigPaths(), addTransformIndexHtml],
   server: {
     cors: true,

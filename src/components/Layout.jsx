@@ -1,42 +1,45 @@
-import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import Sidebar from '@/components/Sidebar';
-import Header from '@/components/Header';
-import { useAuth } from '@/contexts/AuthContext';
+import { Link, Outlet } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
-const Layout = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { currentUser } = useAuth();
-
-  if (!currentUser) {
-    return null; // Se não estiver logado, não renderiza nada
-  }
-
+export default function Layout() {
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800">
-      <Header setSidebarOpen={setSidebarOpen} />
-      
-      <div className="flex flex-1 pt-16">
-        <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
-        
-        <main className="flex-1 md:ml-64 transition-all duration-300 ease-in-out overflow-y-auto">
-          <div className="p-4 md:p-6 w-full">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.3 }}
-              className="w-full"
-            >
-              <Outlet />
-            </motion.div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Cabeçalho */}
+      <header className="bg-white dark:bg-gray-800 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16 items-center">
+            <div className="flex">
+              <Link to="/" className="flex-shrink-0 flex items-center">
+                <span className="text-xl font-bold text-gray-900 dark:text-white">
+                  FinanDriver
+                </span>
+              </Link>
+            </div>
+            <nav className="flex space-x-8">
+              <Button variant="ghost" asChild>
+                <Link to="/ganhos">Ganhos</Link>
+              </Button>
+              <Button variant="ghost" asChild>
+                <Link to="/despesas">Despesas</Link>
+              </Button>
+              <Button variant="ghost" asChild>
+                <Link to="/despesas-pessoais">Pessoais</Link>
+              </Button>
+              <Button variant="ghost" asChild>
+                <Link to="/reserva-emergencia">Reserva</Link>
+              </Button>
+              <Button variant="ghost" asChild>
+                <Link to="/relatorios">Relatórios</Link>
+              </Button>
+            </nav>
           </div>
-        </main>
-      </div>
+        </div>
+      </header>
+
+      {/* Conteúdo principal */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <Outlet />
+      </main>
     </div>
   );
-};
-
-export default Layout;
-
+}

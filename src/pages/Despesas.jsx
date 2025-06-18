@@ -5,8 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import TransactionForm from '@/components/TransactionForm';
 import TransactionList from '@/components/TransactionList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth } from '@/contexts/AuthContext';
-import { getDespesasCarro, getDespesasCombustivel, addDespesaCarro, addDespesaCombustivel, deleteDespesa } from '@/services/supabaseService';  // Importando do novo serviço
 
 const categoriasDespesasCarro = [
   'Manutenção', 'Seguro', 'Limpeza', 'Estacionamento', 'Pedágio', 'Financiamento', 'Diária do Carro', 'Outro'
@@ -16,68 +14,40 @@ const categoriasDespesasCombustivel = [
   'Gasolina', 'Álcool', 'Diesel', 'GNV', 'Recarga Elétrica'
 ];
 
-const Despesas = ({ deleteItem }) => {
-  const { currentUser } = useAuth();
-  const [despesasCarro, setDespesasCarro] = useState([]);
-  const [despesasCombustivel, setDespesasCombustivel] = useState([]);
+const Despesas = ({ 
+  despesasCarro, 
+  despesasCombustivel,
+  addDespesaCarro,
+  addDespesaCombustivel,
+  deleteItem 
+}) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
-  useEffect(() => {
-    const loadDespesas = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        if (currentUser) {
-          // Carregando despesas de carro e combustível do Supabase
-          const loadCarroData = await getDespesasCarro(currentUser.uid, (data) => {
-            setDespesasCarro(data);
-          });
-
-          const loadCombustivelData = await getDespesasCombustivel(currentUser.uid, (data) => {
-            setDespesasCombustivel(data);
-          });
-        }
-      } catch (err) {
-        setError('Erro ao carregar as despesas. Tente novamente mais tarde.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadDespesas();
-  }, [currentUser]);
-
   const handleAddDespesaCarro = async (despesaData) => {
-    if (currentUser) {
-      setLoading(true);
-      setError(null);
-      try {
-        const newDespesa = await addDespesaCarro(currentUser.uid, despesaData);
-        setDespesasCarro((prev) => [...prev, newDespesa[0]]);
-        setSuccessMessage('Despesa de carro registrada com sucesso!');
-      } catch (err) {
-        setError('Erro ao adicionar despesa de carro. Tente novamente.');
-      } finally {
-        setLoading(false);
-      }
+    setLoading(true);
+    setError(null);
+    try {
+      await addDespesaCarro(despesaData);
+      setSuccessMessage('Despesa de carro registrada com sucesso!');
+    } catch (err) {
+      setError('Erro ao adicionar despesa de carro. Tente novamente.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleAddDespesaCombustivel = async (despesaData) => {
-    if (currentUser) {
-      setLoading(true);
-      setError(null);
-      try {
-        const newDespesa = await addDespesaCombustivel(currentUser.uid, despesaData);
-        setDespesasCombustivel((prev) => [...prev, newDespesa[0]]);
-        setSuccessMessage('Despesa de combustível registrada com sucesso!');
-      } catch (err) {
-        setError('Erro ao adicionar despesa de combustível. Tente novamente.');
-      } finally {
-        setLoading(false);
-      }
+    setLoading(true);
+    setError(null);
+    try {
+      await addDespesaCombustivel(despesaData);
+      setSuccessMessage('Despesa de combustível registrada com sucesso!');
+    } catch (err) {
+      setError('Erro ao adicionar despesa de combustível. Tente novamente.');
+    } finally {
+      setLoading(false);
     }
   };
 

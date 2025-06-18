@@ -6,26 +6,19 @@ import TransactionForm from '@/components/TransactionForm';
 import TransactionList from '@/components/TransactionList';
 import StatCard from '@/components/StatCard';
 
-const categoriasReserva = [
-  'Depósito',
-  'Retirada'
-];
+const categoriasReserva = ['Depósito', 'Retirada'];
 
-const ReservaEmergencia = ({ reservaEmergencia, addReservaEmergencia, deleteItem }) => {
-  const safeReservaEmergencia = reservaEmergencia || [];
-
-  const saldoReserva = safeReservaEmergencia.reduce((acc, item) => {
-    if (item.categoria === 'Depósito') {
-      return acc + item.valor;
-    } else if (item.categoria === 'Retirada') {
-      return acc - item.valor;
-    }
-    return acc;
+const ReservaEmergencia = ({ 
+  reservaEmergencia = [], 
+  addReservaEmergencia, 
+  deleteItem 
+}) => {
+  // Cálculo do saldo
+  const saldoReserva = reservaEmergencia.reduce((acc, item) => {
+    return item.categoria === 'Depósito' 
+      ? acc + Number(item.valor) 
+      : acc - Number(item.valor);
   }, 0);
-
-  const handleAddReserva = (transacao) => {
-    addReservaEmergencia(transacao);
-  };
 
   return (
     <div className="space-y-6">
@@ -41,16 +34,16 @@ const ReservaEmergencia = ({ reservaEmergencia, addReservaEmergencia, deleteItem
         <p className="text-muted-foreground mt-1">Gerencie sua reserva para imprevistos</p>
       </motion.div>
 
-      {/* Exibição do saldo da reserva */}
+      {/* Saldo */}
       <StatCard 
         title="Saldo da Reserva" 
-        value={saldoReserva} 
+        value={saldoReserva.toFixed(2)} 
         icon={ShieldCheck} 
         valuePrefix="R$ "
         className="border-l-4 border-teal-500"
       />
       
-      {/* Formulário e histórico de movimentações */}
+      {/* Formulário e Histórico */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-1">
           <Card>
@@ -59,10 +52,9 @@ const ReservaEmergencia = ({ reservaEmergencia, addReservaEmergencia, deleteItem
             </CardHeader>
             <CardContent>
               <TransactionForm 
-                onSubmit={handleAddReserva} 
+                onSubmit={addReservaEmergencia} 
                 type="reservaEmergencia" 
                 categorias={categoriasReserva}
-                successMessage="Movimentação registrada com sucesso!"  // Mensagem de feedback de sucesso
               />
             </CardContent>
           </Card>
@@ -75,11 +67,15 @@ const ReservaEmergencia = ({ reservaEmergencia, addReservaEmergencia, deleteItem
             </CardHeader>
             <CardContent>
               <TransactionList 
-                items={safeReservaEmergencia} 
+                items={reservaEmergencia} 
                 onDelete={deleteItem} 
                 type="reservaEmergencia"
-                emptyMessage="Nenhuma movimentação na reserva de emergência ainda."
-                noDataIcon={<ShieldCheck className="h-12 w-12 text-gray-300" />}  // Ícone visual quando não há dados
+                emptyMessage={
+                  <div className="flex flex-col items-center gap-2">
+                    <ShieldCheck className="h-12 w-12 text-gray-300" />
+                    <span>Nenhuma movimentação registrada</span>
+                  </div>
+                }
               />
             </CardContent>
           </Card>

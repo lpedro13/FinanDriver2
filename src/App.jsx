@@ -1,201 +1,140 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import { AnimatePresence } from 'framer-motion';
-import { AuthProvider, useAuth } from '@/contexts/AuthContext';
-import {
-  getDespesasCarro as getDespesasCarroSupabase,
-  getDespesasCombustivel as getDespesasCombustivelSupabase,
-  getDespesasPessoais as getDespesasPessoaisSupabase,
-  getReservasEmergencia as getReservasEmergenciaSupabase,
-  getGanhos as getGanhosSupabase,
-  addDespesaCarro as addDespesaCarroSupabase,
-  addDespesaCombustivel as addDespesaCombustivelSupabase,
-  addDespesaPessoal as addDespesaPessoalSupabase,
-  addReservaEmergencia as addReservaEmergenciaSupabase,
-  addGanho as addGanhoSupabase,
-  deleteDespesaCarro as deleteDespesaCarroSupabase,
-  deleteDespesaCombustivel as deleteDespesaCombustivelSupabase,
-  deleteDespesaPessoal as deleteDespesaPessoalSupabase,
-  deleteReservaEmergencia as deleteReservaEmergenciaSupabase,
-  deleteGanho as deleteGanhoSupabase
-} from '@/services/supabaseService';  // Agora vamos usar o Supabase
 
+// Importações de componentes
+import Layout from '@/components/Layout';
 import Dashboard from '@/pages/Dashboard';
 import Ganhos from '@/pages/Ganhos';
 import Despesas from '@/pages/Despesas';
 import DespesasPessoais from '@/pages/DespesasPessoais';
-import Relatorios from '@/pages/Relatorios';
 import ReservaEmergencia from '@/pages/ReservaEmergencia';
-import Layout from '@/components/Layout';
-import LoginPage from '@/pages/LoginPage';
-import RegisterPage from '@/pages/RegisterPage';
-import ProtectedRoute from '@/components/ProtectedRoute';
+import Relatorios from '@/pages/Relatorios';
 
-const AppContent = () => {
-  const { currentUser, loading } = useAuth();
-  const [financialData, setFinancialData] = useState({
-    ganhos: [],
-    despesasCarro: [],
-    despesasCombustivel: [],
-    despesasPessoais: [],
-    reservaEmergencia: [],
+// Utilitários
+const useLocalStorage = (key, initialValue) => {
+  const [storedValue, setStoredValue] = useState(() => {
+    try {
+      const item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      console.error(error);
+      return initialValue;
+    }
   });
 
-  useEffect(() => {
-    const loadFinancialData = async () => {
-      if (currentUser) {
-        try {
-          const [
-            ganhos,
-            despesasCarro,
-            despesasCombustivel,
-            despesasPessoais,
-            reservaEmergencia,
-          ] = await Promise.all([
-            getGanhosSupabase(currentUser.id),
-            getDespesasCarroSupabase(currentUser.id),
-            getDespesasCombustivelSupabase(currentUser.id),
-            getDespesasPessoaisSupabase(currentUser.id),
-            getReservasEmergenciaSupabase(currentUser.id),
-          ]);
+  const setValue = (value) => {
+    try {
+      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      setStoredValue(valueToStore);
+      localStorage.setItem(key, JSON.stringify(valueToStore));
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-          setFinancialData({
-            ganhos,
-            despesasCarro,
-            despesasCombustivel,
-            despesasPessoais,
-            reservaEmergencia,
-          });
-        } catch (error) {
-          console.error('Erro ao carregar dados financeiros:', error);
-        }
-      }
+  return [storedValue, setValue];
+};
+
+const AppContent = () => {
+  // Estados para cada tipo de dado
+  const [ganhos, setGanhos] = useLocalStorage('ganhos', []);
+  const [despesasCarro, setDespesasCarro] = useLocalStorage('despesasCarro', []);
+  const [despesasCombustivel, setDespesasCombustivel] = useLocalStorage('despesasCombustivel', []);
+  const [despesasPessoais, setDespesasPessoais] = useLocalStorage('despesasPessoais', []);
+  const [reservaEmergencia, setReservaEmergencia] = useLocalStorage('reservaEmergencia', []);
+
+  // Função genérica para adicionar itens
+  const handleAddItem = useCallback((type, data, setter) => {
+    const newItem = { 
+      ...data, 
+      id: Date.now().toString(),
+      data: new Date().toISOString() 
     };
-
-    loadFinancialData();
-  }, [currentUser]);
-
-  const addToList = useCallback((listName, item) => {
-    setFinancialData(prev => ({
-      ...prev,
-      [listName]: [...(prev[listName] || []), item]
-    }));
+    setter(prev => [...prev, newItem]);
   }, []);
 
-  const addGanho = useCallback(async (ganho) => {
-    if (!currentUser) return;
-    await addGanhoSupabase(currentUser.id, ganho);
-    addToList('ganhos', ganho);
-  }, [addToList, currentUser]);
+  // Função genérica para remover itens
+  const handleDeleteItem = useCallback((type, id, setter) => {
+    setter(prev => prev.filter(item => item.id !== id));
+  }, []);
 
-  const addDespesaCarro = useCallback(async (despesa) => {
-    if (!currentUser) return;
-    await addDespesaCarroSupabase(currentUser.id, despesa);
-    addToList('despesasCarro', despesa);
-  }, [addToList, currentUser]);
+  // Funções específicas para cada tipo
+  const addGanho = useCallback((ganho) => 
+    handleAddItem('ganhos', ganho, setGanhos), [handleAddItem]);
+  
+  const addDespesaCarro = useCallback((despesa) => 
+    handleAddItem('despesasCarro', despesa, setDespesasCarro), [handleAddItem]);
+  
+  const addDespesaCombustivel = useCallback((despesa) => 
+    handleAddItem('despesasCombustivel', despesa, setDespesasCombustivel), [handleAddItem]);
+  
+  const addDespesaPessoal = useCallback((despesa) => 
+    handleAddItem('despesasPessoais', despesa, setDespesasPessoais), [handleAddItem]);
+  
+  const addReservaEmergencia = useCallback((reserva) => 
+    handleAddItem('reservaEmergencia', reserva, setReservaEmergencia), [handleAddItem]);
 
-  const addDespesaCombustivel = useCallback(async (despesa) => {
-    if (!currentUser) return;
-    await addDespesaCombustivelSupabase(currentUser.id, despesa);
-    addToList('despesasCombustivel', despesa);
-  }, [addToList, currentUser]);
-
-  const addDespesaPessoal = useCallback(async (despesa) => {
-    if (!currentUser) return;
-    await addDespesaPessoalSupabase(currentUser.id, despesa);
-    addToList('despesasPessoais', despesa);
-  }, [addToList, currentUser]);
-
-  const addReservaEmergencia = useCallback(async (reserva) => {
-    if (!currentUser) return;
-    await addReservaEmergenciaSupabase(currentUser.id, reserva);
-    addToList('reservaEmergencia', reserva);
-  }, [addToList, currentUser]);
-
-  const deleteItem = useCallback(async (type, id) => {
-    if (!currentUser) return;
-
-    try {
-      switch (type) {
-        case 'ganhos':
-          await deleteGanhoSupabase(currentUser.id, id);
-          break;
-        case 'despesasCarro':
-          await deleteDespesaCarroSupabase(currentUser.id, id);
-          break;
-        case 'despesasCombustivel':
-          await deleteDespesaCombustivelSupabase(currentUser.id, id);
-          break;
-        case 'despesasPessoais':
-          await deleteDespesaPessoalSupabase(currentUser.id, id);
-          break;
-        case 'reservaEmergencia':
-          await deleteReservaEmergenciaSupabase(currentUser.id, id);
-          break;
-        default:
-          console.warn(`Tipo de item não reconhecido: ${type}`);
-          return;
-      }
-
-      setFinancialData(prev => ({
-        ...prev,
-        [type]: prev[type].filter(item => item.id !== id),
-      }));
-    } catch (error) {
-      console.error(`Erro ao deletar item (${type} - ${id}):`, error);
+  const deleteItem = useCallback((type, id) => {
+    switch(type) {
+      case 'ganhos': return handleDeleteItem(type, id, setGanhos);
+      case 'despesasCarro': return handleDeleteItem(type, id, setDespesasCarro);
+      case 'despesasCombustivel': return handleDeleteItem(type, id, setDespesasCombustivel);
+      case 'despesasPessoais': return handleDeleteItem(type, id, setDespesasPessoais);
+      case 'reservaEmergencia': return handleDeleteItem(type, id, setReservaEmergencia);
+      default: console.warn(`Tipo desconhecido: ${type}`);
     }
-  }, [currentUser]);
+  }, [handleDeleteItem]);
 
   const location = useLocation();
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800">
-        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-xl">
-          <p className="text-lg font-semibold text-gray-700 dark:text-gray-200">Carregando Aplicação...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-
-          <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Dashboard financialData={financialData} />} />
-              <Route path="ganhos" element={<Ganhos ganhos={financialData.ganhos} addGanho={addGanho} deleteItem={deleteItem} />} />
-              <Route path="despesas" element={
-                <Despesas
-                  despesasCarro={financialData.despesasCarro}
-                  despesasCombustivel={financialData.despesasCombustivel}
-                  addDespesaCarro={addDespesaCarro}
-                  addDespesaCombustivel={addDespesaCombustivel}
-                  deleteItem={deleteItem}
-                />
-              } />
-              <Route path="despesas-pessoais" element={
-                <DespesasPessoais
-                  despesasPessoais={financialData.despesasPessoais}
-                  addDespesaPessoal={addDespesaPessoal}
-                  deleteItem={deleteItem}
-                />
-              } />
-              <Route path="reserva-emergencia" element={
-                <ReservaEmergencia
-                  reservaEmergencia={financialData.reservaEmergencia}
-                  addReservaEmergencia={addReservaEmergencia}
-                  deleteItem={deleteItem}
-                />
-              } />
-              <Route path="relatorios" element={<Relatorios financialData={financialData} />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Route>
+          <Route path="/" element={<Layout />}>
+            <Route index element={
+              <Dashboard 
+                financialData={{ ganhos, despesasCarro, despesasCombustivel, despesasPessoais, reservaEmergencia }} 
+              />
+            } />
+            <Route path="ganhos" element={
+              <Ganhos 
+                ganhos={ganhos} 
+                addGanho={addGanho} 
+                deleteItem={deleteItem} 
+              />
+            } />
+            <Route path="despesas" element={
+              <Despesas
+                despesasCarro={despesasCarro}
+                despesasCombustivel={despesasCombustivel}
+                addDespesaCarro={addDespesaCarro}
+                addDespesaCombustivel={addDespesaCombustivel}
+                deleteItem={deleteItem}
+              />
+            } />
+            <Route path="despesas-pessoais" element={
+              <DespesasPessoais
+                despesasPessoais={despesasPessoais}
+                addDespesaPessoal={addDespesaPessoal}
+                deleteItem={deleteItem}
+              />
+            } />
+            <Route path="reserva-emergencia" element={
+              <ReservaEmergencia
+                reservaEmergencia={reservaEmergencia}
+                addReservaEmergencia={addReservaEmergencia}
+                deleteItem={deleteItem}
+              />
+            } />
+            <Route path="relatorios" element={
+              <Relatorios 
+                financialData={{ ganhos, despesasCarro, despesasCombustivel, despesasPessoais, reservaEmergencia }} 
+              />
+            } />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
       </AnimatePresence>
@@ -205,9 +144,9 @@ const AppContent = () => {
 };
 
 const App = () => (
-  <AuthProvider>
+  <HashRouter>
     <AppContent />
-  </AuthProvider>
+  </HashRouter>
 );
 
 export default App;

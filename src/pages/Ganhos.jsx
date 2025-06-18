@@ -1,44 +1,28 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import TransactionForm from '@/components/TransactionForm';
 import TransactionList from '@/components/TransactionList';
-import { useAuth } from '@/contexts/AuthContext'; 
-import { getGanhos, addGanho } from '@/services/supabaseService'; // ✅ agora usando supabase
 
 const categoriasGanhos = ['Corrida', 'Entrega', 'Gorjeta', 'Bônus', 'Outro'];
 
-const Ganhos = ({ deleteItem }) => {
-  const { currentUser } = useAuth();
-  const [userGanhos, setUserGanhos] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const loadGanhos = async () => {
-      setLoading(true);
-      try {
-        if (currentUser) {
-          const data = await getGanhos(currentUser.id); // 👈 user.id no Supabase
-          setUserGanhos(data);
-        }
-      } catch (error) {
-        console.error('Erro ao carregar ganhos:', error);
-      }
-      setLoading(false);
-    };
-
-    loadGanhos();
-  }, [currentUser]);
+const Ganhos = ({ 
+  ganhos, 
+  addGanho,
+  deleteItem,
+  loading = false 
+}) => {
+  const [localLoading, setLocalLoading] = useState(false);
 
   const handleAddGanho = async (ganhoData) => {
-    if (currentUser) {
-      try {
-        await addGanho(currentUser.id, ganhoData);
-        setUserGanhos(userGanhos => [...userGanhos, ganhoData]);
-      } catch (error) {
-        console.error('Erro ao adicionar ganho:', error);
-      }
+    setLocalLoading(true);
+    try {
+      await addGanho(ganhoData);
+    } catch (error) {
+      console.error('Erro ao adicionar ganho:', error);
+    } finally {
+      setLocalLoading(false);
     }
   };
 
@@ -74,9 +58,9 @@ const Ganhos = ({ deleteItem }) => {
               <CardTitle>Histórico de Ganhos</CardTitle>
             </CardHeader>
             <CardContent>
-              {loading ? <div>Carregando...</div> : (
+              {(loading || localLoading) ? <div>Carregando...</div> : (
                 <TransactionList 
-                  items={userGanhos || []} 
+                  items={ganhos || []} 
                   onDelete={deleteItem} 
                   type="ganhos"
                   emptyMessage="Nenhum ganho registrado ainda. Adicione seu primeiro ganho!"
