@@ -1,15 +1,21 @@
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { resolve } from 'path'
 
-<!doctype html>
-<html lang="pt-BR">
-	<head>
-		<meta charset="UTF-8" />
-		<link rel="icon" type="image/svg+xml" href="./vite.svg" />
-		<meta name="generator" content="Hostinger Horizons" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Controle Financeiro para Motoristas</title>
-	</head>
-	<body>
-		<div id="root"></div>
-		<script type="module" src="./src/main.jsx"></script>
-	</body>
-</html>
+export default defineConfig({
+  plugins: [react()],
+  base: '/FinanDriver2/',
+  build: {
+    outDir: 'docs',
+    emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html')
+      },
+      output: {
+        entryFileNames: 'assets/[name].[hash].js',
+        assetFileNames: 'assets/[name].[hash][extname]'
+      }
+    }
+  }
+})

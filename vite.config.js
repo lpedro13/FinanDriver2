@@ -1,32 +1,16 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import path from 'path';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { resolve } from 'path'
 
 export default defineConfig({
-  base: '/FinanDriver2/', // Corrigido para o nome do repositório
   plugins: [react()],
+  base: '/FinanDriver2/',
   build: {
-    outDir: 'docs', // Especifica a pasta de saída
-    emptyOutDir: true, // Limpa a pasta de saída antes do build
+    outDir: 'docs',
     rollupOptions: {
-      output: {
-        assetFileNames: 'assets/[name].[hash].[ext]',
-        chunkFileNames: 'assets/[name].[hash].js',
-        entryFileNames: 'assets/[name].[hash].js'
+      input: {
+        main: resolve(__dirname, 'index.html')
       }
     }
-  },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-    extensions: ['.js', '.jsx', '.ts', '.tsx', '.json']
-  },
-  server: {
-    cors: true,
-    headers: {
-      'Cross-Origin-Embedder-Policy': 'credentialless',
-    },
-    allowedHosts: true,
   }
-});
+})
